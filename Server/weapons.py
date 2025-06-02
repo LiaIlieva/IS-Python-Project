@@ -15,6 +15,9 @@ class Weapon:
         self.damage = damage
         self.description = description
 
+        self.width = player_width
+        self.height = player_height
+
     def load_frames(self, frame_width, frame_height, scale_factor):
         """Extract individual frames from the sprite sheet and apply scaling."""
         frames = []
@@ -82,7 +85,7 @@ class Sword(Weapon):
             self.slash_timer = 0
             print("Slash animation started!")
 
-    def update_slash(self, dt, player_x, player_y, facing_left, enemies):
+    def update_slash(self, dt, player_x, player_y, facing_left, enemies, cultists):
         """Update the slash animation and check for collisions."""
         if self.slash_active:
             self.slash_timer += dt
@@ -94,10 +97,24 @@ class Sword(Weapon):
 
                 # Check for collisions with enemies
                 slash_rect = self.get_slash_rect(player_x, player_y, facing_left)
+                enemies_taken_damage = []
+                cultists_taken_damage = []
+                i = 0
                 for enemy in enemies:
                     if slash_rect.colliderect(enemy.get_rect()):
                         print(f"Enemy hit! Damage: {self.damage}")
-                        enemy.take_damage(self.damage)
+                        enemies_taken_damage.append([i, self.damage])
+                        # enemy.take_damage(self.damage)
+                    i += 1
+                i = 0
+                for enemy in cultists:
+                    if slash_rect.colliderect(enemy.get_rect()):
+                        print(f"Cultist hit! Damage: {self.damage}")
+                        cultists_taken_damage.append([i, self.damage])
+                    i += 1
+                return enemies_taken_damage, cultists_taken_damage
+        return None
+
 
     def get_slash_rect(self, player_x, player_y, facing_left):
         """Get the rectangle of the current slash frame."""
@@ -136,8 +153,9 @@ class Weapons:
     def __init__(self, player_width, player_height):
         # Initialize a list of weapons
         self.weapons = [
-            Bow("Game models/Weapons/Bow.png", 0, 0, player_width, player_height, damage=15, range=300, attack_speed=1.5, description="A ranged weapon for long-distance attacks."),
-            Sword("Game models/Weapons/Sword.png", "Game models/Animations/Slash.png", 0, 0, player_width, player_height, rotation_angle=-80, damage=1, range=50, attack_speed=1.0, description="A melee weapon for close combat.")
+            Bow("Game_models/Weapons/Bow.png", 0, 0, player_width, player_height, damage=15, range=300, attack_speed=1.5, description="A ranged weapon for long-distance attacks."),
+            Sword("Game_models/Weapons/Sword.png",
+                  "Game_models/Animations/Slash.png", 0, 0, player_width, player_height, rotation_angle=-80, damage=1, range=50, attack_speed=1.0, description="A melee weapon for close combat.")
         ]
         self.active_weapon_index = 0 
 

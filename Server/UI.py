@@ -3,7 +3,8 @@ import pygame
 class Inventory:
     def __init__(self, screen_width, screen_height):
         # Load the inventory frame texture
-        self.frame_image = pygame.image.load("Game models/UI/inventory.png").convert_alpha()
+        self.frame_image = pygame.image.load(
+            "Game_models/UI/inventory.png").convert_alpha()
 
         # Scale the frame to fit the desired slot size
         self.slot_size = 64  # Size of each inventory slot
@@ -32,8 +33,9 @@ class Inventory:
 
         # Weapon textures for the inventory
         self.weapon_textures = [
-            pygame.image.load("Game models/Weapons/Bow.png").convert_alpha(),
-            pygame.image.load("Game models/Weapons/Sword.png").convert_alpha()
+            pygame.image.load("Game_models/Weapons/Bow.png").convert_alpha(),
+            pygame.image.load(
+                "Game_models/Weapons/Sword.png").convert_alpha()
         ]
 
         # Scale weapon textures to fit the inventory slots
