@@ -6,7 +6,7 @@ import random
 import uuid
 import subprocess
 
-# from DungeonGame import pygame_loop
+
 from game_modes import show_waiting_screen
 import pygame
 import time
@@ -15,10 +15,9 @@ import webbrowser
 
 import os
 import threading
-# Path to folder containing DungeonGame.py
+
 # sys.path.append(r"C:\Users\USER\Desktop\IS-Python-Project")
 
-#from DungeonGame import start_pygame, async_game_logic
 
 SERVER_URL = "http://localhost:8000"
 WS_URL = "ws://localhost:8000/ws/game"
