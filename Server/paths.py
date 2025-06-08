@@ -16,7 +16,9 @@ from contextlib import asynccontextmanager
 # app = FastAPI()
 
 TIME_TO_REMOVE_ROOM = 3000
-SERVER_URL = "http://localhost:8000"
+# SERVER_URL = "http://localhost:8000"
+SERVER_URL = " https://usable-arachnid-crucial.ngrok-free.app"
+SERVER = "usable-arachnid-crucial.ngrok-free.app"
 TEMP_WALLET_FILE = 'wallet.txt'
 
 # system-level concerns

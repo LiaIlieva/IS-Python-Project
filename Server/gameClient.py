@@ -18,9 +18,12 @@ import threading
 
 # sys.path.append(r"C:\Users\USER\Desktop\IS-Python-Project")
 
+from paths import SERVER_URL, SERVER
+# SERVER_URL = "http://localhost:8000"
+# SERVER_URL = "https://88fb-2a01-5a8-307-657e-7c0b-3951-5b30-f9d4.ngrok-free.app/"
+# WS_URL = "ws://localhost:8000/ws/game"
 
-SERVER_URL = "http://localhost:8000"
-WS_URL = "ws://localhost:8000/ws/game"
+# WS_URL = f"wss://usable-arachnid-crucial.ngrok-free.app/ws/game"
 
 from Entities import Player, Zombie, Cultist
 from weapons import Weapons
@@ -143,7 +146,7 @@ class GameClient:
                 return
 
     async def get_wallet_address(self):
-        WS_URL = "ws://localhost:8000"# Step 1: Start WebSocket to wait for wallet
+        # Step 1: Start WebSocket to wait for wallet
         session_id = str(uuid.uuid4())
         ws_url = f"{WS_URL}/ws/wallet_wait/{session_id}"
         print(f"Connecting to WebSocket: {ws_url}")
@@ -379,7 +382,7 @@ class GameClient:
 
     async def run(self):
         # first display and connect the Metamask wallet
-        await self.get_wallet_address()
+        # await self.get_wallet_address()
         await self.connect()
         # wait to start game
         pygame.init()
