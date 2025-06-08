@@ -89,20 +89,21 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str, player_id: str)
                         player["y"] += dy
             elif data["type"] == "damaged_enemies":
                 async with room.lock:
-                    for enemy in data["enemies"]:
-                        e_id, damage = enemy["id"], enemy["damage"]
-                        room.enemies[e_id].current_health -= damage
-                        if room.enemies[e_id].current_health <= 0:
-                            # remove enemy -> killed
-                            pass
+                    if data["enemies"]:
+                        for enemy in data["enemies"]:
+                            e_id, damage = enemy["id"], enemy["damage"]
+                            room.enemies[e_id].current_health -= damage
+                            if room.enemies[e_id].current_health <= 0:
+                                # remove enemy -> killed
+                                await room.remove_enemy(e_id, player_id)
 
-                    for cultists in data["cultists"]:
-                        e_id, damage = cultists["id"], cultists["damage"]
-                        room.cultists[e_id].current_health -= damage
-                        if room.cultists[e_id].current_health <= 0:
-                            # remove cultists -> killed
-                            pass
-
+                    if data["cultists"]:
+                        for cultists in data["cultists"]:
+                            e_id, damage = cultists["id"], cultists["damage"]
+                            room.cultists[e_id].current_health -= damage
+                            if room.cultists[e_id].current_health <= 0:
+                                # remove cultists -> killed
+                                await room.remove_cultist(e_id, player_id)
 
     except WebSocketDisconnect:
         await room.remove_player(player_id)

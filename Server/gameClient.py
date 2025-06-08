@@ -47,8 +47,8 @@ class GameClient:
         self.cultists_coord = []
         self.player = None                          # instance of class Player
         self.players = {}
-        self.enemies = []
-        self.cultists = []
+        self.enemies = {}
+        self.cultists = {}
 
         self.weapons = None
         self.inventory = None
@@ -90,6 +90,14 @@ class GameClient:
                             self.running = False
                             self.game_started = False
                             print("Connection closed")
+                    elif data["type"] == "enemy_killed":
+                        e_id = data["id"]
+                        self.enemies.pop(e_id)
+                        self.enemies_coord.pop(e_id)
+                    elif data["type"] == "cultist_killed":
+                        e_id = data["id"]
+                        self.cultists.pop(e_id)
+                        self.cultists_coord.pop(e_id)
                     elif data["type"] == "room_closed":
                         print("Problem occured! Room closed!")
                         self.running = False
@@ -165,26 +173,31 @@ class GameClient:
                 self.players[pl_id] = Player(x=x, y=y, speed=SPEED, sprite_path=OTHER_PLAYER_1_SPRITE_PATH)  # Treat as NPCs
 
         for e in self.enemies_coord:
-            x, y = e["x"], e["y"]
-            self.enemies.append(Zombie(x=x, y=y))
+            e_id, x, y = e["id"], e["x"], e["y"]
+            self.enemies[e_id] = (Zombie(x=x, y=y))
 
         for e in self.cultists_coord:
-            x, y = e["x"], e["y"]
-            self.cultists.append(Cultist(x=x, y=y))
+            c_id, x, y = e["id"], e["x"], e["y"]
+            self.cultists[c_id] = (Cultist(x=x, y=y))
 
         self.weapons = Weapons(player_width=self.player.width, player_height=self.player.height)
         self.inventory = Inventory(screen_width=WIDTH, screen_height=HEIGHT)
 
     async def send_damaged_enemies(self, output):
         enemies_taken_damage, cultists_taken_damage = output
+        e, c = [], []
+        if enemies_taken_damage:
+            e = [{"id": enemy_id, "damage": damage} for enemy_id, damage in enemies_taken_damage]
+        if cultists_taken_damage:
+            c = [{"id": enemy_id, "damage": damage} for enemy_id, damage in cultists_taken_damage]
         try:
             msg = json.dumps({
                 "type": "damaged_enemies",
-                "enemies": [{"id": enemy_id, "damage": damage} for enemy_id, damage in enemies_taken_damage],
-                "cultists": [{"id": enemy_id, "damage": damage} for enemy_id, damage in cultists_taken_damage]
+                "enemies": e,
+                "cultists": c
             })
             await self.ws.send(msg)
-            # await asyncio.sleep(0.2)
+        # await asyncio.sleep(0.2)
         except websockets.exceptions.ConnectionClosed:
             print("Connection closed (send)")
             self.running = False
@@ -210,23 +223,21 @@ class GameClient:
                 self.players[pl_id].current_health = health
                 self.players[pl_id].draw(window, camera_x, camera_y)
 
-        i = 0
         for prop in self.enemies_coord:
-            x, y, health = prop["x"], prop["y"], prop["health"]
+            i, x, y, health = prop["id"], prop["x"], prop["y"], prop["health"]
             self.enemies[i].x = x
             self.enemies[i].y = y
             self.enemies[i].current_health = health
             self.enemies[i].draw(window, camera_x, camera_y)
-            i += 1
 
-        i = 0
+
         for prop in self.cultists_coord:
-            x, y, health = prop["x"], prop["y"], prop["health"]
+            i, x, y, health = prop["id"], prop["x"], prop["y"], prop["health"]
             self.cultists[i].x = x
             self.cultists[i].y = y
             self.cultists[i].current_health = health
             self.cultists[i].draw(window, camera_x, camera_y)
-            i += 1
+
 
     async def draw_lighting_effect(self, window):
         lighting_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)

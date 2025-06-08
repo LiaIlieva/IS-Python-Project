@@ -99,19 +99,18 @@ class Sword(Weapon):
                 slash_rect = self.get_slash_rect(player_x, player_y, facing_left)
                 enemies_taken_damage = []
                 cultists_taken_damage = []
-                i = 0
-                for enemy in enemies:
+
+                for k, enemy in enemies.items():
                     if slash_rect.colliderect(enemy.get_rect()):
                         print(f"Enemy hit! Damage: {self.damage}")
-                        enemies_taken_damage.append([i, self.damage])
+                        enemies_taken_damage.append([k, self.damage])
                         # enemy.take_damage(self.damage)
-                    i += 1
-                i = 0
-                for enemy in cultists:
+
+                for k, enemy in cultists.items():
                     if slash_rect.colliderect(enemy.get_rect()):
                         print(f"Cultist hit! Damage: {self.damage}")
-                        cultists_taken_damage.append([i, self.damage])
-                    i += 1
+                        cultists_taken_damage.append([k, self.damage])
+
                 return enemies_taken_damage, cultists_taken_damage
         return None
 

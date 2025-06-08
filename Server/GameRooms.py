@@ -32,8 +32,8 @@ class GameRoom:
         self.loop_task = None
         self.started_at = None
         self.position_index = 0
-        self.enemies = []
-        self.cultists = []
+        self.enemies : Dict[int, Zombie] = {}
+        self.cultists : Dict[int, Cultist] = {}
         self.dead_players = []
 
 
@@ -67,10 +67,30 @@ class GameRoom:
         for i in range(num_enemies):
             x, y = self.get_random_spawn_location()
             if i % 2 == 0:
-                self.enemies.append(Zombie(x, y, load_sprites=False))
+                self.enemies[i] = (Zombie(x, y, load_sprites=False))
             else:
-                self.cultists.append(Cultist(x, y, load_sprites=False))
+                self.cultists[i] = (Cultist(x, y, load_sprites=False))
 
+    def all_enemies_killed(self):
+        if self.enemies is None and self.cultists is None:
+            return True
+        return False
+
+    async def remove_enemy(self, enemy_id : int, killer : str):
+        if enemy_id in self.enemies:
+            self.enemies.pop(enemy_id, None)
+            await self.broadcast_enemy_killed(enemy_id)
+            if self.all_enemies_killed():
+                await self.broadcast_winner(killer)
+                await self.shutdown()
+
+    async def remove_cultist(self, cultist_id : int, killer : str):
+        if cultist_id in self.enemies:
+            self.cultists.pop(cultist_id, None)
+            await self.broadcast_cultist_killed(cultist_id)
+            if self.all_enemies_killed():
+                await self.broadcast_winner(killer)
+                await self.shutdown()
 
     async def start_game(self):
         print("starting game")
@@ -80,8 +100,8 @@ class GameRoom:
         await self.initialize_enemies()
         # send the starting Message
         start_msg = {"type": "start_game", "players": self.state,
-                     "enemies": [{"x": e.x, "y": e.y, "health": e.current_health} for e in self.enemies],
-                      "cultists": [{"x": e.x, "y": e.y, "health": e.current_health} for e in self.cultists]}
+                     "enemies": [{"id": k, "x": e.x, "y": e.y, "health": e.current_health} for k, e in self.enemies.items()],
+                      "cultists": [{"id": k, "x": e.x, "y": e.y, "health": e.current_health} for k, e in self.cultists.items()]}
         for ws in self.players.values():
             try:
                 await ws.send_json(start_msg)
@@ -142,11 +162,41 @@ class GameRoom:
 
         return pl_cords
 
+    async def broadcast_cultist_killed(self, cultist_id):
+        state_msg = {"type": "cultist_killed",
+                     "id": cultist_id}
+
+        for ws in self.players.values():
+            try:
+                await ws.send_json(state_msg)
+            except:
+                pass
+
+    async def broadcast_enemy_killed(self, e_id):
+        state_msg = {"type": "enemy_killed",
+                     "id": e_id }
+
+        for ws in self.players.values():
+            try:
+                await ws.send_json(state_msg)
+            except:
+                pass
+
+    async def broadcast_winner(self, winner : str):
+        state_msg = {"type": "game_ended",
+                     "winner": winner}
+
+        for ws in self.players.values():
+            try:
+                await ws.send_json(state_msg)
+            except:
+                pass
 
     async def broadcast_state(self):
+
         state_msg = {"type": "state_update", "players": self.state,
-                     "enemies": [{"x": e.x, "y": e.y, "health": e.current_health} for e in self.enemies],
-                     "cultists": [{"x": e.x, "y": e.y, "health": e.current_health} for e in self.cultists]}
+                     "enemies": [{"id": k, "x": e.x, "y": e.y, "health": e.current_health} for k, e in self.enemies.items()],
+                      "cultists": [{"id": k, "x": e.x, "y": e.y, "health": e.current_health} for k, e in self.cultists.items()]}
 
         for ws in self.players.values():
             try:
@@ -157,16 +207,16 @@ class GameRoom:
     async def game_loop(self):
         try:
             previous_time = asyncio.get_running_loop().time()
-            print("2")
+
             while self.running:
                 await asyncio.sleep(TICK_RATE)
 
                 current_time = asyncio.get_running_loop().time()
                 dt = current_time - previous_time
                 previous_time = current_time
-                print("2")
+
                 # Update enemies
-                for enemy in self.enemies:
+                for enemy in self.enemies.values():
                     player, cords = await self.get_closest_player(enemy)
                     print("2")
                     if cords:
@@ -179,7 +229,7 @@ class GameRoom:
                             self.dead_players.append(player)
 
 
-                for cultist in self.cultists:
+                for cultist in self.cultists.values():
                     player, cords = await self.get_closest_player(cultist)
                     if cords:
                         cultist.follow_player(cords[0], cords[1], dt)
